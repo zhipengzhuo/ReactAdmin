@@ -3,5 +3,6 @@
  */
 
  export default {
-   user: {} // 内存中保存登陆的user信息
+   user: {}, // 内存中保存登陆的user信息
+   product: {}, // 指定的商品对象
  }

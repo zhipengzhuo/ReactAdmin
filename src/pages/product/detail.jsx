@@ -6,6 +6,8 @@ import {Card, Icon, List} from 'antd'
 import LinkButton from '../../components/link-button'
 import {BASE_IMG_URL} from '../../utils/constants'
 import {reqCategory} from '../../api'
+import memoryUtils from '../../utils/memoryUtils'
+
 
 const Item = List.Item
 
@@ -18,7 +20,7 @@ export default class ProductDetail extends Component {
 
   async componentDidMount () {
     // 得到当前商品的分类ID
-    const {categoryId, pCategoryId} = this.props.location.state.product
+    const {categoryId, pCategoryId} = memoryUtils.product
     // console.log('componentDidMount()', categoryId, pCategoryId)
     if (pCategoryId === '0') { // 一级分类下的商品
       const result = await reqCategory(categoryId)
@@ -51,11 +53,16 @@ export default class ProductDetail extends Component {
     }
   }
 
+  // 在卸载之前清除保存的数据
+  componentWillMount () {
+    memoryUtils.product = {}
+  }
+
   render () {
 
     // 读取携带过来的state属性
     // console.log(this.props.location.state)
-    const {name, desc, detail, imgs, price} = this.props.location.state.product
+    const {name, desc, detail, price, imgs} = memoryUtils.product
     const {cName2, cName1} = this.state
     const title = (
       <span>
@@ -93,7 +100,7 @@ export default class ProductDetail extends Component {
             <span className='left'>商品图片</span>
             <span>
               {
-                imgs.map(img => <img 
+                imgs.map(img => <img
                   key={img}
                   className='product-img' 
                   src={BASE_IMG_URL + img} 
