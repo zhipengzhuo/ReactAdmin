@@ -4,14 +4,19 @@
 import React, {Component} from 'react'
 import { Form, Icon, Input, Button, message } from 'antd'
 import {Redirect} from 'react-router-dom'
+import {connect} from 'react-redux'
+import PropTypes from 'prop-types'
 
+import {login} from '../../redux/actions'
 import './login.less'
 import logo from '../../assets/images/logo.png'
-import {reqLogin} from '../../api'
-import memoryUtils from '../../utils/memoryUtils'
-import storageUtil from '../../utils/storageUtil'
+
 
 class Login extends Component {
+  static propTypes = {
+    user: PropTypes.object.isRequired,
+    login: PropTypes.func.isRequired
+  }
 
   handleSubmit = (event) => {
     // 阻止表单的默认行为
@@ -23,21 +28,8 @@ class Login extends Component {
         // console.log('提交登陆的ajax请求 ', values)
         // 请求登陆
         const {username, password} = values
-        const result = await reqLogin(username, password)
-        if (result.status === 0) { // 登陆成功
-          // 提示登陆成功
-          message.success('登陆成功')
-          // 保存user
-          const user = result.data
-          memoryUtils.user = user // 保存到内存中
-          storageUtil.saveUser(user) // 保存到local中
-          // 跳转到后台管理界面(不需要回退回来)
-          this.props.history.replace('/')
-
-        } else { // 登陆失败
-          // 提示错误信息
-          message.error(result.msg)
-        }
+        // 调用分发异步action的函数 => 发登陆的异步请求，有了结果后更新状态
+        this.props.login(username, password)
       } else {
         console.log('校验失败!')
       }
@@ -63,10 +55,14 @@ class Login extends Component {
 
   render () {
     // 如果用户已经登陆，自动跳转到管理界面
-    const user = memoryUtils.user
+    const user = this.props.user
+    console.log(' render () ', user)
     if (user && user._id) {
-      return <Redirect to='/'/>
+      return <Redirect to='/home'/>
     }
+    const errorMsg = this.props.user.errorMsg
+    console.log(errorMsg)
+
     // 得到具有强大功能的form
     const {form} = this.props
     const {getFieldDecorator} = form 
@@ -77,7 +73,8 @@ class Login extends Component {
           <h1>React项目: 后台管理系统</h1>
         </header>
         <section className="login-content">
-          <h2>用户登陆</h2>
+          <div  className={user.errorMsg ? 'error-msg show' :'error-msg'}>{errorMsg}</div>
+          <h2 >用户登陆</h2>
           <Form onSubmit={this.handleSubmit} className="login-form">
             <Form.Item>
               {
@@ -129,4 +126,7 @@ class Login extends Component {
 // 包装Form组件，生成一个新的组件：
 //  新组件会向Form组件传递一个强大的对象属性： form
 const WrappLogin = Form.create()(Login)
-export default WrappLogin
+export default connect(
+  state => ({user: state.user}),
+  {login}
+)(WrappLogin) 

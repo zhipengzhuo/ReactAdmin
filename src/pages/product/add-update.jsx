@@ -7,6 +7,7 @@ import LinkButton from '../../components/link-button'
 import {reqCategorys, reqAddOrUpdateProduct} from '../../api'
 import PicturesWall from './pictures-wall'
 import RichTextEditor from './rich-text-editor'
+import memoryUtils from '../../utils/memoryUtils'
 
 const {Item} = Form
 const { TextArea } = Input
@@ -97,7 +98,7 @@ class ProductAddUpdate extends Component {
     }
 
     // 更新options状态
-    this.setState({
+    this.setState({ 
       options: [...this.state.options]
     })
   }
@@ -150,13 +151,18 @@ class ProductAddUpdate extends Component {
 
   componentWillMount () {
     // 取出携带的数据
-    const product = this.props.location.state // 如果是添加没值，否则有值
-    this.isUpdate = !!product // 保存一个是否是更新的标识
+    const product = memoryUtils.product // 如果是添加没值，否则有值
+    this.isUpdate = !!product._id // 保存一个是否是更新的标识
     this.product = product || {} // 保存商品，如果没有保存的是一个空对象，避免报错
   }
 
   componentDidMount () {
     this.getCategorys('0')
+  }
+
+  // 在卸载之前清除保存的数据
+  componentWillUnmount () {
+    memoryUtils.product = {}
   }
 
   render () {

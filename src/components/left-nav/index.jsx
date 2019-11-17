@@ -3,21 +3,26 @@
 import React, {Component} from 'react'
 import {Link, withRouter} from 'react-router-dom'
 import { Menu, Icon } from 'antd'
+import {connect} from 'react-redux'
+import PropTypes from 'prop-types'
 
 import './index.less'
 import logo from '../../assets/images/logo.png'
 import menuList from '../../config/menuConfig'
-import memoryUtils from '../../utils/memoryUtils'
+import {setHeadTitle} from '../../redux/actions'
 
 const { SubMenu } = Menu
 
 class LeftNav extends Component {
+  static propTypes = {
+    setHeadTitle: PropTypes.func.isRequired
+  }
   
   // 判断当前登陆用户对item是否有权限
   hasAuth = (item) => {
     const {key, isPublic} = item
-    const menus = memoryUtils.user.role.menus
-    const username =memoryUtils.user.username
+    const menus = this.props.user.role.menus
+    const username =this.props.user.username
     /* 
      1. 如果当前用户是admin
      2. 如果当前item是公开的
@@ -67,13 +72,18 @@ class LeftNav extends Component {
   // 使用reduce + 递归调用
   getMenuNodes = (menuList) => {
     return menuList.reduce((pre, item) => {
-
+      const path = this.props.location.pathname
       // 如果当前用户有item对应的权限，才需要显示对应的菜单项
       if (this.hasAuth(item)) {
         if (!item.children) {
+          // 判断item是否是当前对应item
+          if (item.key === path || path.indexOf(item.key) === 0) {
+            // 更新redux 里headTitle 状态
+            this.props.setHeadTitle(item.title)
+          }
           pre.push((
             <Menu.Item key={item.key}>
-              <Link to={item.key}>
+              <Link to={item.key} onClick={() => this.props.setHeadTitle(item.title)}>
                 <Icon type={item.icon} />
                 <span>{item.title}</span>
               </Link>
@@ -147,4 +157,7 @@ class LeftNav extends Component {
 // withRouter 高阶组件，
 // 包装非路由组件，返回一个新的组件，
 // 新组件向非路由组件传递3个属性： history / location / math
-export default withRouter(LeftNav)
+export default connect(
+  state => ({user: state.user}),
+  {setHeadTitle}
+)(withRouter(LeftNav))
